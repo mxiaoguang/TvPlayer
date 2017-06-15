@@ -9,7 +9,6 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +18,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.mmengchen.tvplayer.R;
+import com.mmengchen.tvplayer.utils.LogUtils;
 import com.mmengchen.tvplayer.utils.StringUtils;
 
 import java.util.ArrayList;
@@ -254,12 +254,12 @@ public class TvVideoView extends FrameLayout {
                     handler.sendEmptyMessageDelayed(
                             4, TvVideoView.this.AD_Time);//2秒后广告消失
                 } else if (AD_TYPE == AD_TYPE_VIDEO) {
-                    if (!AD_VIDEO_URLS.isEmpty()){
+                    if (!AD_VIDEO_URLS.isEmpty()) {
                         mVideoView.setVideoPath(AD_IMG_URLS.get(currentPlayPosition));
                         mVideoView.start();
                         initVideo();
                     } else {
-                        if (adListener!=null){
+                        if (adListener != null) {
                             adListener.onError("video ad urls is can not null");
                         }
                     }
@@ -353,7 +353,7 @@ public class TvVideoView extends FrameLayout {
         mControllerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.i(TAG, "video progress is " + progress
+                LogUtils.i("video progress is " + progress
                 );
                 int position = seekBar.getProgress();
                 int sum_position = seekBar.getMax();
@@ -361,8 +361,8 @@ public class TvVideoView extends FrameLayout {
                 float seekbarWidth = seekBar.getX();
                 float y = seekBar.getY();
                 float width = (position * x) / sum_position + seekbarWidth;
-                Log.i("info---x", x + "");
-                Log.i("info---y", y + "");
+                LogUtils.i("info---x" + x + "");
+                LogUtils.i("info---y" + y + "");
                 mControllerSeekTime.setText(StringUtils.generateTime(seekBar.getProgress()));
                 mControllerSeekTime.setX(width - 15);
                 mControllerSeekTime.setY(y - 10);
@@ -371,12 +371,12 @@ public class TvVideoView extends FrameLayout {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                Log.i(TAG, "start progress is " + seekBar.getProgress());
+                LogUtils.i("start progress is " + seekBar.getProgress());
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.i(TAG, "end progress is" + seekBar.getProgress());
+                LogUtils.i("end progress is" + seekBar.getProgress());
             }
         });
     }

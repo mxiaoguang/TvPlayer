@@ -22,6 +22,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 
+import com.mmengchen.tvplayer.utils.LogUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -222,10 +223,10 @@ class VideoView extends SurfaceView implements MediaController.MediaPlayerContro
             mMediaPlayer.prepareAsync();
             attachMediaController();
         } catch (IOException ex) {
-            Log.w(TAG, "Unable to open content: " + mUri, ex);
+            LogUtils.w(TAG, "Unable to open content: " + mUri, ex);
             return;
         } catch (IllegalArgumentException ex) {
-            Log.w(TAG, "Unable to open content: " + mUri, ex);
+            LogUtils.w(TAG, "Unable to open content: " + mUri, ex);
             return;
         }
     }
