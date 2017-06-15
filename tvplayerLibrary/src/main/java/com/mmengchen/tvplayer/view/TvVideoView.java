@@ -1,6 +1,7 @@
 package com.mmengchen.tvplayer.view;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -13,6 +14,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -31,30 +33,38 @@ import java.util.TimerTask;
 public class TvVideoView extends FrameLayout {
     private String TAG = TvVideoView.class.getSimpleName();
 
+    public static final int AD_TYPE_IMG = 1;
+    public static final int AD_TYPE_VIDEO = 2;
+
     private boolean isOpenPlayPart = false;//是否开启试看功能
     private boolean isOpenAD = false;//是否开启广告功能
     private int playPartTime = 5000 * 60;//试看的时间默认为5分钟(单位分钟)
     private int AD_Time = 5;//默认广告时间为5秒
-    private final int AD_TYPE_IMG = 1;
-    private final int AD_TYPE_VIDEO = 2;
+
     private int AD_TYPE;//广告的类型
     private List<String> AD_IMG_URLS = new ArrayList<>();//广告的图片地址
     private List<String> AD_VIDEO_URLS = new ArrayList<>();//广告的视频地址
+    private int currentPlayPosition = 0;//广告当前播放的位置
 
     private ADListener adListener = null;
     private PlayPartLister playPartLister = null;
+    private VideoListener videoListener = null;
 
     private int PROGRESS = 0;
     private int HIDE = 1;
+
     private MyVideoView mVideoView;
     private SeekBar mControllerSeekBar;
     private TextView mControllerCurrentTime;
     private TextView mControllerSumTime;
     private TextView mControllerSeekTime;
     private FrameLayout mVideoController;
+    private ImageView mADImgView;
+
     private Long s_KB;
     private AudioManager audioManager;
 
+    private CircleTextProgressbar circle_progress;
     private Handler handler = new Handler() {
 
         @Override
@@ -81,7 +91,7 @@ public class TvVideoView extends FrameLayout {
                     System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" + s_KB);
                     //progressDialog.setMessage("视频加载中" + StringUtils.getNetString(s_KB) + "...");
                     break;
-                case 3://计时
+                case 3://试看计时结束
                     task.cancel();
                     timer.cancel(); //退出计时器
                     if (mVideoView != null && mVideoView.isPlaying()) {
@@ -92,11 +102,32 @@ public class TvVideoView extends FrameLayout {
                         }
                     }
                     break;
+                case 4://广告结束
+                    if (AD_TYPE == AD_TYPE_IMG) {
+                        mADImgView.setVisibility(INVISIBLE);
+                        mVideoView.setVisibility(VISIBLE);//显示视频控件
+                        circle_progress.setVisibility(INVISIBLE);
+                        adListener.onEnd();
+                        mVideoView.start();
+                        initVideo();
+                    } else if (AD_TYPE == AD_TYPE_VIDEO) {
+                        mVideoView.setVideoPath(TvVideoView.this.URL);
+                        mVideoView.start();
+                    }
+
+                    break;
+                case 5://广告计时
+                    int num = (int) msg.obj;
+                    circle_progress.setProgress((3 - num) * 33);
+                    break;
             }
             super.handleMessage(msg);
         }
     };
 
+    /**
+     * 执行试看功能
+     */
     public TimerTask task = new TimerTask() {
         public void run() {
             Message message = new Message();
@@ -105,6 +136,7 @@ public class TvVideoView extends FrameLayout {
         }
     };
     private Timer timer;
+    private String URL;
 
     public TvVideoView(@NonNull Context context) {
         super(context);
@@ -118,12 +150,14 @@ public class TvVideoView extends FrameLayout {
     }
 
     private void initView(View view) {
-        mVideoView = (MyVideoView) view.findViewById(R.id.video_view);
+        mVideoView = (MyVideoView) view.findViewById(R.id.tv_player_ad_video_view);
         mVideoController = (FrameLayout) view.findViewById(R.id.video_controller);
         mControllerSeekBar = (SeekBar) view.findViewById(R.id.controller_seekBar);
         mControllerCurrentTime = (TextView) view.findViewById(R.id.controller_current_time);
         mControllerSumTime = (TextView) view.findViewById(R.id.controller_sum_time);
         mControllerSeekTime = (TextView) view.findViewById(R.id.controller_seek_time);
+        mADImgView = (ImageView) view.findViewById(R.id.tv_player_ad_iv);
+        circle_progress = (CircleTextProgressbar) findViewById(R.id.tv_player_circle_progress);
         audioManager = (AudioManager) view.getContext().getSystemService(Context.AUDIO_SERVICE);
         audioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
     }
@@ -180,10 +214,25 @@ public class TvVideoView extends FrameLayout {
                 });
             }
         });
+        mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                if (isOpenAD && AD_TYPE == AD_TYPE_VIDEO) {
+                    int nextPlayPosition = currentPlayPosition++;
+                    if (nextPlayPosition < AD_VIDEO_URLS.size()) {
+                        mVideoView.setVideoPath(AD_IMG_URLS.get(nextPlayPosition));
+                        mVideoView.start();
+                    } else {//广告播放完毕
+                        handler.sendEmptyMessage(4);
+                    }
+                }
+            }
+        });
     }
 
     //设置视频路径
     public void setVideoPath(String url) {
+        this.URL = url;
         mVideoView.setVideoPath(url);
     }
 
@@ -194,8 +243,36 @@ public class TvVideoView extends FrameLayout {
 
     //开始播放视频
     public void start() {
-        mVideoView.start();
-        initVideo();
+        if (URL!=null){
+
+
+        //在播放前判断是否加入广告
+        if (isOpenAD) {
+            if (AD_TYPE == AD_TYPE_IMG) {
+                mADImgView.setVisibility(VISIBLE);//显示图片控件
+                mVideoView.setVisibility(INVISIBLE);
+                initCircleProgress();
+                mADImgView.setImageResource(R.drawable.ad_img);
+                handler.sendEmptyMessageDelayed(
+                        4, TvVideoView.this.AD_Time);//2秒后广告消失
+            } else if (AD_TYPE == AD_TYPE_VIDEO) {
+                mVideoView.setVideoPath(AD_IMG_URLS.get(currentPlayPosition));
+                mVideoView.start();
+                initVideo();
+            } else {
+                adListener.onError("ad type is error");
+                mVideoView.start();
+                initVideo();
+            }
+        } else {
+            mVideoView.start();
+            initVideo();
+        }
+        } else {
+            if (videoListener!=null){
+                videoListener.onError("url is can not null!");
+            }
+        }
     }
 
     //暂停视频
@@ -233,14 +310,14 @@ public class TvVideoView extends FrameLayout {
     }
 
     public int getPlayPartTime() {//加1s 解决一秒误差
-        return playPartTime * 60000+1000;
+        return playPartTime * 60000 + 1000;
     }
 
     public void setPlayPartTime(int playPartTime) {
         this.playPartTime = playPartTime;
     }
 
-    public void setAD_TIme(int AD_Time) {
+    public void setAD_Time(int AD_Time) {
         this.AD_Time = AD_Time;
     }
 
@@ -294,6 +371,31 @@ public class TvVideoView extends FrameLayout {
                 Log.i(TAG, "end progress is" + seekBar.getProgress());
             }
         });
+    }
+
+    void initCircleProgress() {
+        circle_progress.setGravity(View.VISIBLE);
+        circle_progress.setProgressType(CircleTextProgressbar.ProgressType.COUNT);
+        circle_progress.setProgressLineWidth(10);// 进度条宽度。
+        circle_progress.setTimeMillis(3000);
+//        circle_progress.setTimeMillis((long) AD_Time);
+        circle_progress.setProgressColor(Color.parseColor("#ff8400"));
+        circle_progress.setOutLineColor(Color.parseColor("#ff8400"));
+        circle_progress.setInCircleColor(Color.parseColor("#00ff8400"));
+        circle_progress.start();
+        CircleTextProgressbar.OnCountdownProgressListener progressListener = new CircleTextProgressbar.OnCountdownProgressListener() {
+            @Override
+            public void onProgress(int what, int progress) {
+                if (what == 5) {
+                    if (circle_progress != null) {
+                        circle_progress.setText((3 - progress / 33) + "s");
+                    } else {
+//                        circle_progress.stop();
+                    }
+                }
+            }
+        };
+        circle_progress.setCountdownProgressListener(5, progressListener);
     }
 
     @Override
@@ -363,11 +465,15 @@ public class TvVideoView extends FrameLayout {
         boolean ret = super.dispatchKeyEvent(event);
         return ret;
     }
-
+public interface VideoListener{
+    void onError(String msg);
+}
     public interface ADListener {
         void onStart();
 
         void onClick();
+
+        void onError(String errMsg);
 
         void onEnd();
     }

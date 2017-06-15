@@ -41,8 +41,11 @@ or Gradle:
 
 - 电视上的视频进度条的优化
 - 试看功能
-- 使用方式
+- 广告功能
+-
      
+###试看功能  使用方式
+
 在videoview start() 方法前设置以下三行代码 当试看开始时候被调用，当试看结束之后onEnd 方法被调用   暂时不支持自定义试看视频连接
 
         videoview.setOpenPlayPart(true);//开启试看功能
@@ -60,14 +63,44 @@ or Gradle:
             }
         });`
 
+###广告功能使用方式
+
+在videoview start() 方法前设置以下三行代码 当试看开始时候被调用，当试看结束之后onEnd 方法被调用   暂时不支持自定义试看视频连接
+
+        videoview.setOpenAD(true);//设置开启广告
+        videoview.setAD_Time(1000*60);//设置广告时间
+        videoview.setAD_TYPE(TvVideoView.AD_TYPE_IMG);//设置类型为图片广告
+        videoview.setADURLS = "";//设置广告连接
+        videoview.setAdListener(new TvVideoView.ADListener() {
+            @Override
+            public void onStart() {
+
+            }
+
+            @Override
+            public void onClick() {
+
+            }
+
+            @Override
+            public void onError(String errMsg) {
+
+            }
+
+            @Override
+            public void onEnd() {
+                Log.i("myTag","广告结束了,当前视频时间为"+ StringUtils.generateTime(videoview.getCurrentPosition()));
+            }
+        });
 **待完善功能**
 
-- 广告功能  （）
+- 广告功能  （2017.06.15加入，未完善）
 - 试看功能  （2017.06.15完成）
+- 日志功能
 
 **支持格式**
 
-- FLV MP4
+- FLV MP4 支持
 - M3U8 RTMP 等其他格式未来版本支持
 
 

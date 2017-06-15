@@ -55,7 +55,42 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         videoview = (TvVideoView) findViewById(R.id.act_videoview);
         videoview.setVideoPath("http://video.aimengchong.cc/exposure_4.flv");
-        videoview.setOpenPlayPart(true);//开启试看功能
+        testPlayPart(false);//测试试看功能
+        testAD(true);
+        videoview.start();
+
+    }
+
+
+    private void testAD(boolean b) {
+        videoview.setOpenAD(true);
+        videoview.setAD_Time(1000*60);
+        videoview.setAD_TYPE(TvVideoView.AD_TYPE_IMG);//设置图片广告
+        videoview.setAdListener(new TvVideoView.ADListener() {
+            @Override
+            public void onStart() {
+
+            }
+
+            @Override
+            public void onClick() {
+
+            }
+
+            @Override
+            public void onError(String errMsg) {
+
+            }
+
+            @Override
+            public void onEnd() {
+                Log.i("myTag","广告结束了,当前视频时间为"+ StringUtils.generateTime(videoview.getCurrentPosition()));
+            }
+        });
+    }
+
+    private void testPlayPart(boolean flag) {
+        videoview.setOpenPlayPart(false);// flag 为true开启试看功能
         videoview.setPlayPartTime(1);//试看时间为一分钟
         videoview.setPlayPartLister(new TvVideoView.PlayPartLister() {
             @Override
@@ -68,11 +103,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("myTag","试看结束,时间为"+ StringUtils.generateTime(videoview.getCurrentPosition()));
             }
         });
-        videoview.start();
-
-      /*  VideoView videoView = (VideoView) findViewById(R.id.act_videovidew);
-        videoView.setVideoPath("http://video.aimengchong.cc/petkit-G1.flv");
-        videoView.start();*/
     }
 
     /**
