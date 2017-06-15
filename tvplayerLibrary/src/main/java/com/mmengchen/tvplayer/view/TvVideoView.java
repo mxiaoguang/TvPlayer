@@ -21,6 +21,8 @@ import com.mmengchen.tvplayer.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by 11655 on 2017/6/14.
@@ -28,11 +30,20 @@ import java.util.List;
 
 public class TvVideoView extends FrameLayout {
     private String TAG = TvVideoView.class.getSimpleName();
+
+    private boolean isOpenPlayPart = false;//是否开启试看功能
+    private boolean isOpenAD = false;//是否开启广告功能
+    private int playPartTime = 5000 * 60;//试看的时间默认为5分钟(单位分钟)
+    private int AD_Time = 5;//默认广告时间为5秒
     private final int AD_TYPE_IMG = 1;
     private final int AD_TYPE_VIDEO = 2;
     private int AD_TYPE;//广告的类型
     private List<String> AD_IMG_URLS = new ArrayList<>();//广告的图片地址
     private List<String> AD_VIDEO_URLS = new ArrayList<>();//广告的视频地址
+
+    private ADListener adListener = null;
+    private PlayPartLister playPartLister = null;
+
     private int PROGRESS = 0;
     private int HIDE = 1;
     private MyVideoView mVideoView;
@@ -63,18 +74,37 @@ public class TvVideoView extends FrameLayout {
                     }
                     break;
                 case 1:
-//                    mVideoController.setVisibility(View.INVISIBLE);
+                    mVideoController.setVisibility(View.INVISIBLE);
                     break;
                 case 2:
                     s_KB = (Long) msg.obj;
                     System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" + s_KB);
                     //progressDialog.setMessage("视频加载中" + StringUtils.getNetString(s_KB) + "...");
                     break;
+                case 3://计时
+                    task.cancel();
+                    timer.cancel(); //退出计时器
+                    if (mVideoView != null && mVideoView.isPlaying()) {
+                        mVideoView.pause();
+                        removeMessages(0);//暂停进度条
+                        if (playPartLister != null) {
+                            playPartLister.onEnd();//调用试看结束的方法
+                        }
+                    }
+                    break;
             }
             super.handleMessage(msg);
         }
     };
 
+    public TimerTask task = new TimerTask() {
+        public void run() {
+            Message message = new Message();
+            message.what = 3;
+            handler.sendMessage(message);
+        }
+    };
+    private Timer timer;
 
     public TvVideoView(@NonNull Context context) {
         super(context);
@@ -94,25 +124,63 @@ public class TvVideoView extends FrameLayout {
         mControllerCurrentTime = (TextView) view.findViewById(R.id.controller_current_time);
         mControllerSumTime = (TextView) view.findViewById(R.id.controller_sum_time);
         mControllerSeekTime = (TextView) view.findViewById(R.id.controller_seek_time);
+        audioManager = (AudioManager) view.getContext().getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
     }
 
+    /*
+    *
+    * 初始化视频相关
+    *
+    * */
     private void initVideo() {
         mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                //自定义进度条
-                mControllerSeekBar.setMax(mp.getDuration());//设置进度条的最大值为视频的总长度
-                mControllerSumTime.setText(StringUtils.generateTime(mp.getDuration()));
-                // /*发消息开始刷新进度**/
-                handler.sendEmptyMessage(PROGRESS);
+                mp.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+                    @Override
+                    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                        if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {//视频开始播放
+                            // video started
+//                            loadingDialog.cancel();
+                            //自定义进度条
+                            mControllerSeekBar.setMax(mp.getDuration());//设置进度条的最大值为视频的总长度
+                            mControllerSumTime.setText(StringUtils.generateTime(mp.getDuration()));
+                            // /*发消息开始刷新进度**/
+                            handler.sendEmptyMessage(PROGRESS);
+                            if (isOpenPlayPart) {//判断是否为试看
+                                if (task != null) {
+                                    task.cancel();  //将原任务从队列中移除
+                                }
+                                task = new TimerTask() {
+                                    public void run() {
+                                        Message message = new Message();
+                                        message.what = 3;
+                                        handler.sendMessage(message);
+                                    }
+                                };
+                                //开启计时
+                                timer = new Timer(true);
+                                timer.schedule(task, TvVideoView.this.getPlayPartTime());//getPlayPartTime秒执行一次
+                            }
+                        }
+                        if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
+//                    progressDialog.show();
+//                    initNetBar();
+                        } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
+                            //此接口每次回调完START就回调END,若不加上判断就会出现缓冲图标一闪一闪的卡顿现象
+                            if (mp.isPlaying()) {
+                                handler.removeMessages(2);
+//                                progressDialog.dismiss();
+                            }
+                        }
+                        return false;
+                    }
+
+                });
             }
         });
     }
-    /*
-    *
-    * 初始化视频
-    *
-    * */
 
     //设置视频路径
     public void setVideoPath(String url) {
@@ -155,11 +223,52 @@ public class TvVideoView extends FrameLayout {
         return mVideoView.isPlaying();
     }
 
+
+    public void setOpenPlayPart(boolean openPlayPart) {
+        isOpenPlayPart = openPlayPart;
+    }
+
+    public void setOpenAD(boolean openAD) {
+        isOpenAD = openAD;
+    }
+
+    public int getPlayPartTime() {//加1s 解决一秒误差
+        return playPartTime * 60000+1000;
+    }
+
+    public void setPlayPartTime(int playPartTime) {
+        this.playPartTime = playPartTime;
+    }
+
+    public void setAD_TIme(int AD_Time) {
+        this.AD_Time = AD_Time;
+    }
+
+    public void setAD_TYPE(int AD_TYPE) {
+        this.AD_TYPE = AD_TYPE;
+    }
+
+    public void setAD_IMG_URLS(List<String> AD_IMG_URLS) {
+        this.AD_IMG_URLS = AD_IMG_URLS;
+    }
+
+    public void setAD_VIDEO_URLS(List<String> AD_VIDEO_URLS) {
+        this.AD_VIDEO_URLS = AD_VIDEO_URLS;
+    }
+
+    public void setAdListener(ADListener adListener) {
+        this.adListener = adListener;
+    }
+
+    public void setPlayPartLister(PlayPartLister playPartLister) {
+        this.playPartLister = playPartLister;
+    }
+
     private void initSeekBar() {
         mControllerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.i("myTag", "进度为" + progress
+                Log.i(TAG, "video progress is " + progress
                 );
                 int position = seekBar.getProgress();
                 int sum_position = seekBar.getMax();
@@ -177,12 +286,12 @@ public class TvVideoView extends FrameLayout {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                Log.i("myTag", "开始的进度为" + seekBar.getProgress());
+                Log.i(TAG, "start progress is " + seekBar.getProgress());
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.i("myTag", "停止的进度为" + seekBar.getProgress());
+                Log.i(TAG, "end progress is" + seekBar.getProgress());
             }
         });
     }
@@ -253,5 +362,21 @@ public class TvVideoView extends FrameLayout {
         }
         boolean ret = super.dispatchKeyEvent(event);
         return ret;
+    }
+
+    public interface ADListener {
+        void onStart();
+
+        void onClick();
+
+        void onEnd();
+    }
+
+    public interface PlayPartLister {
+        //试看开始时候调用
+        void onStart();
+
+        //试看结束时候调用
+        void onEnd();
     }
 }

@@ -40,11 +40,30 @@ or Gradle:
 **完成的功能**
 
 - 电视上的视频进度条的优化
+- 试看功能
+- 使用方式
+     
+在videoview start() 方法前设置以下三行代码 当试看开始时候被调用，当试看结束之后onEnd 方法被调用   暂时不支持自定义试看视频连接
+
+        videoview.setOpenPlayPart(true);//开启试看功能
+        videoview.setPlayPartTime(1);//试看时间为一分钟
+        videoview.setPlayPartLister(new TvVideoView.PlayPartLister() {
+            @Override
+            public void onStart() {
+
+            }
+
+            @Override
+            public void onEnd() {
+                Log.i("myTag","试看结束,时间为"+
+                StringUtils.generateTime(videoview.getCurrentPosition()));
+            }
+        });`
 
 **待完善功能**
 
-- 广告功能  
-- 试看功能
+- 广告功能  （）
+- 试看功能  （2017.06.15完成）
 
 **支持格式**
 
