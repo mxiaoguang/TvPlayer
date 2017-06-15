@@ -243,33 +243,37 @@ public class TvVideoView extends FrameLayout {
 
     //开始播放视频
     public void start() {
-        if (URL!=null){
-
-
-        //在播放前判断是否加入广告
-        if (isOpenAD) {
-            if (AD_TYPE == AD_TYPE_IMG) {
-                mADImgView.setVisibility(VISIBLE);//显示图片控件
-                mVideoView.setVisibility(INVISIBLE);
-                initCircleProgress();
-                mADImgView.setImageResource(R.drawable.ad_img);
-                handler.sendEmptyMessageDelayed(
-                        4, TvVideoView.this.AD_Time);//2秒后广告消失
-            } else if (AD_TYPE == AD_TYPE_VIDEO) {
-                mVideoView.setVideoPath(AD_IMG_URLS.get(currentPlayPosition));
-                mVideoView.start();
-                initVideo();
+        if (URL != null) {
+            //在播放前判断是否加入广告
+            if (isOpenAD) {
+                if (AD_TYPE == AD_TYPE_IMG) {
+                    mADImgView.setVisibility(VISIBLE);//显示图片控件
+                    mVideoView.setVisibility(INVISIBLE);
+                    initCircleProgress();
+                    mADImgView.setImageResource(R.drawable.ad_img);
+                    handler.sendEmptyMessageDelayed(
+                            4, TvVideoView.this.AD_Time);//2秒后广告消失
+                } else if (AD_TYPE == AD_TYPE_VIDEO) {
+                    if (!AD_VIDEO_URLS.isEmpty()){
+                        mVideoView.setVideoPath(AD_IMG_URLS.get(currentPlayPosition));
+                        mVideoView.start();
+                        initVideo();
+                    } else {
+                        if (adListener!=null){
+                            adListener.onError("video ad urls is can not null");
+                        }
+                    }
+                } else {
+                    adListener.onError("ad type is error");
+                    mVideoView.start();
+                    initVideo();
+                }
             } else {
-                adListener.onError("ad type is error");
                 mVideoView.start();
                 initVideo();
             }
         } else {
-            mVideoView.start();
-            initVideo();
-        }
-        } else {
-            if (videoListener!=null){
+            if (videoListener != null) {
                 videoListener.onError("url is can not null!");
             }
         }
@@ -339,6 +343,10 @@ public class TvVideoView extends FrameLayout {
 
     public void setPlayPartLister(PlayPartLister playPartLister) {
         this.playPartLister = playPartLister;
+    }
+
+    public void setVideoListener(VideoListener videoListener) {
+        this.videoListener = videoListener;
     }
 
     private void initSeekBar() {
@@ -465,9 +473,11 @@ public class TvVideoView extends FrameLayout {
         boolean ret = super.dispatchKeyEvent(event);
         return ret;
     }
-public interface VideoListener{
-    void onError(String msg);
-}
+
+    public interface VideoListener {
+        void onError(String msg);
+    }
+
     public interface ADListener {
         void onStart();
 
