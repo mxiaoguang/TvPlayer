@@ -19,7 +19,7 @@
         android:layout_marginTop="30dp"
         android:visibility="invisible" />
 
-    <com.mmengchen.tvplayer.view.MyVideoView
+    <com.mmengchen.tvplayer.view.VideoView
         android:id="@+id/tv_player_ad_video_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

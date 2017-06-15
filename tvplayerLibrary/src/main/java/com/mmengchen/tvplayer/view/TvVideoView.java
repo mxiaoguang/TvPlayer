@@ -53,7 +53,7 @@ public class TvVideoView extends FrameLayout {
     private int PROGRESS = 0;
     private int HIDE = 1;
 
-    private MyVideoView mVideoView;
+    private VideoView mVideoView;
     private SeekBar mControllerSeekBar;
     private TextView mControllerCurrentTime;
     private TextView mControllerSumTime;
@@ -150,7 +150,7 @@ public class TvVideoView extends FrameLayout {
     }
 
     private void initView(View view) {
-        mVideoView = (MyVideoView) view.findViewById(R.id.tv_player_ad_video_view);
+        mVideoView = (VideoView) view.findViewById(R.id.tv_player_ad_video_view);
         mVideoController = (FrameLayout) view.findViewById(R.id.video_controller);
         mControllerSeekBar = (SeekBar) view.findViewById(R.id.controller_seekBar);
         mControllerCurrentTime = (TextView) view.findViewById(R.id.controller_current_time);

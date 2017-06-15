@@ -37,8 +37,9 @@ import static android.media.MediaPlayer.MEDIA_ERROR_UNKNOWN;
  * @Description 自定义VideoView
  */
 
-public class MyVideoView extends SurfaceView implements MediaController.MediaPlayerControl,
+class VideoView extends SurfaceView implements MediaController.MediaPlayerControl,
         Serializable {
+
     private String TAG = "VideoView";
 
     private Context mContext;
@@ -88,19 +89,19 @@ public class MyVideoView extends SurfaceView implements MediaController.MediaPla
         mMyChangeLinstener = l;
     }
 
-    public MyVideoView(Context context) {
+    public VideoView(Context context) {
         super(context);
         mContext = context;
         initVideoView();
     }
 
-    public MyVideoView(Context context, AttributeSet attrs) {
+    public VideoView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
         mContext = context;
         initVideoView();
     }
 
-    public MyVideoView(Context context, AttributeSet attrs, int defStyle) {
+    public VideoView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         mContext = context;
         initVideoView();
@@ -154,15 +155,15 @@ public class MyVideoView extends SurfaceView implements MediaController.MediaPla
     }
 
     public void setVideoPath(String path) {
-        if (!TextUtils.isEmpty(path)){
+        if (!TextUtils.isEmpty(path)) {
             setVideoURI(Uri.parse(path));
         } else {
-            mOnErrorListener.onError(mMediaPlayer,MEDIA_ERROR_UNKNOWN,MEDIA_ERROR_IO);
+            mOnErrorListener.onError(mMediaPlayer, MEDIA_ERROR_UNKNOWN, MEDIA_ERROR_IO);
         }
     }
 
     public void setVideoURI(Uri uri) {
-        if (uri!=null){
+        if (uri != null) {
             mUri = uri; // http://127.0.0.1:9906/55794ea90003e5f50a46e86fbea1fe02.ts
             mStartWhenPrepared = false;// http://127.0.0.1:9906/557fb941000598bd23574a9e29729773.ts环球
             mSeekWhenPrepared = 0;//
@@ -170,7 +171,7 @@ public class MyVideoView extends SurfaceView implements MediaController.MediaPla
             requestLayout();
             invalidate();
         } else {
-            mOnErrorListener.onError(mMediaPlayer,MEDIA_ERROR_UNKNOWN,MEDIA_ERROR_IO);
+            mOnErrorListener.onError(mMediaPlayer, MEDIA_ERROR_UNKNOWN, MEDIA_ERROR_IO);
         }
 
     }
