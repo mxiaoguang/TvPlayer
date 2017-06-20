@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/TvPlayer.iml" filepath="$PROJECT_DIR$/TvPlayer.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tvplayerLibrary/tvplayerLibrary.iml" filepath="$PROJECT_DIR$/tvplayerLibrary/tvplayerLibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tvplayer/tvplayer.iml" filepath="$PROJECT_DIR$/tvplayer/tvplayer.iml" />
     </modules>
   </component>
 </project>
