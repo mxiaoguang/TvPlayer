@@ -6,9 +6,12 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.mmengchen.tvplayer.utils.LogUtils;
 import com.mmengchen.tvplayer.utils.StringUtils;
 import com.mmengchen.tvplayer.view.TvVideoView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -65,11 +68,15 @@ public class MainActivity extends AppCompatActivity {
     private void testAD(boolean b) {
         videoview.setOpenAD(true);
         videoview.setAD_Time(1000*3);//3秒
-        videoview.setAD_TYPE(TvVideoView.AD_TYPE_IMG);//设置图片广告
+//        videoview.setAD_TYPE(TvVideoView.AD_TYPE_IMG);//设置图片广告
+        videoview.setAD_TYPE(TvVideoView.AD_TYPE_VIDEO);//设置视频
+        List<String> urls = new ArrayList<>();
+        urls.add("http://bmob-cdn-7308.b0.upaiyun.com/2016/11/22/76fed5047b5d4ce1b57505199ba540a4.mp4");
+        videoview.setAD_VIDEO_URLS(urls);//注意设置视频/图片都需要设置url
         videoview.setAdListener(new TvVideoView.ADListener() {
             @Override
             public void onStart() {
-
+                LogUtils.i("myTag","dddddddd  on start");
             }
 
             @Override
@@ -79,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(String errMsg) {
-
+                LogUtils.i("myTag","dddddddd  on error"+errMsg);
             }
 
             @Override
             public void onEnd() {
-                Log.i("myTag","广告结束了,当前视频时间为"+ StringUtils.generateTime(videoview.getCurrentPosition()));
+                Log.i("myTag","广告结束了,当前视频时间为");
             }
         });
     }

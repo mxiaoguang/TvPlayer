@@ -106,11 +106,16 @@ public class TvVideoView extends FrameLayout {
                         mADImgView.setVisibility(INVISIBLE);
                         mVideoView.setVisibility(VISIBLE);//显示视频控件
                         circle_progress.setVisibility(INVISIBLE);
-                        adListener.onEnd();
+                        if (adListener != null) {
+                            adListener.onEnd();
+                        }
                         mVideoView.start();
                         initVideo();
                     } else if (AD_TYPE == AD_TYPE_VIDEO) {
-                        adListener.onEnd();
+                        if (adListener != null) {
+                            adListener.onEnd();
+                        }
+                        LogUtils.i("myTag", "ad end this is the true url " + TvVideoView.this.URL);
                         mVideoView.setVideoPath(TvVideoView.this.URL);
                         mVideoView.start();
                     }
@@ -224,9 +229,10 @@ public class TvVideoView extends FrameLayout {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 if (isOpenAD && AD_TYPE == AD_TYPE_VIDEO) {
-                    int nextPlayPosition = currentPlayPosition++;
+                    int nextPlayPosition = currentPlayPosition + 1;
+                    LogUtils.i("myTag", "ad end ............... " + nextPlayPosition);
                     if (nextPlayPosition < AD_VIDEO_URLS.size()) {
-                        mVideoView.setVideoPath(AD_IMG_URLS.get(nextPlayPosition));
+                        mVideoView.setVideoPath(AD_VIDEO_URLS.get(nextPlayPosition));
                         mVideoView.start();
                     } else {//广告播放完毕
                         handler.sendEmptyMessage(4);
@@ -260,10 +266,13 @@ public class TvVideoView extends FrameLayout {
                     handler.sendEmptyMessageDelayed(
                             4, TvVideoView.this.AD_Time);//AD_Time秒后广告消失
                 } else if (AD_TYPE == AD_TYPE_VIDEO) {
-                    if (!AD_VIDEO_URLS.isEmpty()) {
-                        mVideoView.setVideoPath(AD_IMG_URLS.get(currentPlayPosition));
+                    if (!AD_VIDEO_URLS.isEmpty() && AD_VIDEO_URLS.size() > 0) {
+                        mVideoView.setVideoPath(AD_VIDEO_URLS.get(currentPlayPosition));
                         mVideoView.start();
                         initVideo();
+                        if (adListener != null) {
+                            adListener.onStart();
+                        }
                     } else {
                         if (adListener != null) {
                             adListener.onError("video ad urls is can not null");
@@ -278,7 +287,7 @@ public class TvVideoView extends FrameLayout {
                 mVideoView.start();
                 initVideo();
             }
-        } else {
+        } else {//没有广告正常播放
             if (videoListener != null) {
                 videoListener.onError("url is can not null!");
             }
@@ -403,7 +412,7 @@ public class TvVideoView extends FrameLayout {
                     if (circle_progress != null) {
                         circle_progress.setText(((TvVideoView.this.AD_Time / 1000) - progress / 33) + "s");
                     } else {
-//                        circle_progress.stop();
+                        circle_progress.stop();
                     }
                 }
             }
