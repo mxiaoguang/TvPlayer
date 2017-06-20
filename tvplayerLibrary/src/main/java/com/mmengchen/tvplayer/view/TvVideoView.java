@@ -59,7 +59,6 @@ public class TvVideoView extends FrameLayout {
     private TextView mControllerSeekTime;
     private FrameLayout mVideoController;
     private ImageView mADImgView;
-    private TextView textView;
 
     private Long s_KB;
     private AudioManager audioManager;
@@ -119,15 +118,8 @@ public class TvVideoView extends FrameLayout {
                     break;
                 case 5://广告计时
                     int num = (int) msg.obj;
-                    circle_progress.setProgress((3 - num) * 33);
+                    circle_progress.setProgress(((TvVideoView.this.AD_Time / 1000) - num) * 33);
                     break;
-                case 6 ://测试倒计时
-                    TvVideoView.this.AD_Time  = TvVideoView.this.AD_Time -1;
-                    textView.setText(TvVideoView.this.AD_Time+"");
-                    this.sendEmptyMessageDelayed(
-                            6, 1000);
-                    break;
-
             }
             super.handleMessage(msg);
         }
@@ -166,10 +158,14 @@ public class TvVideoView extends FrameLayout {
         mControllerSumTime = (TextView) view.findViewById(R.id.controller_sum_time);
         mControllerSeekTime = (TextView) view.findViewById(R.id.controller_seek_time);
         mADImgView = (ImageView) view.findViewById(R.id.tv_player_ad_iv);
-        textView  =(TextView) findViewById(R.id.tv_player_tv);
         circle_progress = (CircleTextProgressbar) findViewById(R.id.tv_player_circle_progress);
-        audioManager = (AudioManager) view.getContext().getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        try {
+            audioManager = (AudioManager) view.getContext().getSystemService(Context.AUDIO_SERVICE);
+            audioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     /*
@@ -259,12 +255,10 @@ public class TvVideoView extends FrameLayout {
                 if (AD_TYPE == AD_TYPE_IMG) {
                     mADImgView.setVisibility(VISIBLE);//显示图片控件
                     mVideoView.setVisibility(INVISIBLE);
-//                    initCircleProgress();
+                    initCircleProgress();
                     mADImgView.setImageResource(R.drawable.ad_img);
-                    textView.setText(TvVideoView.this.AD_Time+"");
-                    handler.sendEmptyMessageDelayed(6,1000);
                     handler.sendEmptyMessageDelayed(
-                            4, TvVideoView.this.AD_Time);//2秒后广告消失
+                            4, TvVideoView.this.AD_Time);//AD_Time秒后广告消失
                 } else if (AD_TYPE == AD_TYPE_VIDEO) {
                     if (!AD_VIDEO_URLS.isEmpty()) {
                         mVideoView.setVideoPath(AD_IMG_URLS.get(currentPlayPosition));
@@ -326,7 +320,7 @@ public class TvVideoView extends FrameLayout {
     }
 
     public int getPlayPartTime() {//加1s 解决一秒误差
-        return playPartTime * 60000 + 1000;
+        return playPartTime + 1000;
     }
 
     public void setPlayPartTime(int playPartTime) {
@@ -397,8 +391,7 @@ public class TvVideoView extends FrameLayout {
         circle_progress.setGravity(View.VISIBLE);
         circle_progress.setProgressType(CircleTextProgressbar.ProgressType.COUNT);
         circle_progress.setProgressLineWidth(10);// 进度条宽度。
-        circle_progress.setTimeMillis(3000);
-//        circle_progress.setTimeMillis((long) AD_Time);
+        circle_progress.setTimeMillis((long) TvVideoView.this.AD_Time);
         circle_progress.setProgressColor(Color.parseColor("#ff8400"));
         circle_progress.setOutLineColor(Color.parseColor("#ff8400"));
         circle_progress.setInCircleColor(Color.parseColor("#00ff8400"));
@@ -408,7 +401,7 @@ public class TvVideoView extends FrameLayout {
             public void onProgress(int what, int progress) {
                 if (what == 5) {
                     if (circle_progress != null) {
-                        circle_progress.setText((3 - progress / 33) + "s");
+                        circle_progress.setText(((TvVideoView.this.AD_Time / 1000) - progress / 33) + "s");
                     } else {
 //                        circle_progress.stop();
                     }
@@ -470,8 +463,8 @@ public class TvVideoView extends FrameLayout {
                             AudioManager.ADJUST_LOWER,
                             AudioManager.FLAG_SHOW_UI);
                     break;
-                case KeyEvent.KEYCODE_BACK:
-                    break;
+//                case KeyEvent.KEYCODE_BACK:
+//                    break;
             }
         } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_LEFT && event.getAction() == KeyEvent.ACTION_UP ||
                 event.getKeyCode() == KeyEvent.KEYCODE_DPAD_RIGHT && event.getAction() == KeyEvent.ACTION_UP) {

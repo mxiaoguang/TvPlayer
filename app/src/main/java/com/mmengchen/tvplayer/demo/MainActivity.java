@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void testAD(boolean b) {
         videoview.setOpenAD(true);
-        videoview.setAD_Time(1000*60);
+        videoview.setAD_Time(1000*3);//3秒
         videoview.setAD_TYPE(TvVideoView.AD_TYPE_IMG);//设置图片广告
         videoview.setAdListener(new TvVideoView.ADListener() {
             @Override

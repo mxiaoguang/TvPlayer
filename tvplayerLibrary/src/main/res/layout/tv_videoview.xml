@@ -25,15 +25,5 @@
         android:layout_gravity="right|top"
         android:layout_marginRight="30dp"
         android:layout_marginTop="30dp"
-        android:visibility="invisible" />
-    <TextView
-        android:id="@+id/tv_player_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="30dp"
-        android:text="55"
-        android:layout_gravity="top|right"
-        />
+        android:visibility="visible" />
 </FrameLayout>
