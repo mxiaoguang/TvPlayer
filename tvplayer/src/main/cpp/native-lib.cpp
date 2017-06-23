@@ -3,7 +3,8 @@
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_mmengchen_tvplayer_demo_MainActivity_stringFromJNI(
+Java_com_mmengchen_tvplayer_Test_
+        (
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello from C++";

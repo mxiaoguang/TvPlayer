@@ -5,4 +5,9 @@ package com.mmengchen.tvplayer;
  */
 
 public class Test {
+    //载入动态库
+    static {
+        System.loadLibrary("native-lib");
+    }
+    public native String stringFromJNI();
 }
