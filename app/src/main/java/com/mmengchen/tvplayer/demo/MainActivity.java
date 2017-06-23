@@ -6,6 +6,7 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.mmengchen.tvplayer.Test;
 import com.mmengchen.tvplayer.utils.LogUtils;
 import com.mmengchen.tvplayer.utils.StringUtils;
 import com.mmengchen.tvplayer.view.TvVideoView;
@@ -57,10 +58,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         videoview = (TvVideoView) findViewById(R.id.act_videoview);
-        videoview.setVideoPath("http://video.aimengchong.cc/exposure_4.flv");
-        testPlayPart(false);//测试试看功能
+        /*videoview.setVideoPath("http://video.aimengchong.cc/exposure_4.flv");
+        testPlayPart(false);/测试试看功能
         testAD(true);
-        videoview.start();
+        videoview.start();*/
+        Test test = new Test();
+//        LogUtils.i("myTag","jni获取数据"+test.stringFromJNI());
 
     }
 
